@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Judge - Code Submission</title>
+    <!-- Include the Ace Editor CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  </head>
+  <body>
+    <h1>Hendri's Online Coding Assessment</h1>
+    <div class="container">
+        <div class="left-section">
+            <form id="codeSubmissionForm" action="/submit-answer" method="post">
+                <label for="token">Token:</label><br>
+                <input style="width: 100%;" type="text" id="token" name="token" placeholder="Enter your token"><br>
+                <br>
+
+                <label for="problemId">Problem ID:</label><br>
+                <input style="width: 100%;" type="text" id="problemId" name="problemId" placeholder="Enter Problem ID"><br>
+
+                <br><label> Notes </label><br>
+                <label> 
+                Please structure your code submission as follows: 
+                <br>
+                1. Always write your main function as 'def ans()'. 
+                <br>
+                2. The arguments for 'ans()' can be filled based on the given problem.
+                <br>
+                3. You can submit multiple functions as well, and the 'ans' function can call any of these written functions.
+                <br>
+                4. The assessment will only test the 'ans' function directly. 
+                </label>
+                <br>
+                
+                <br>
+                <label for="codeEditor"> Paste your code here:</label><br>
+                <br>
+
+            <div id="editor" style="width: 100%; height: 10%;"></div>
+            <textarea id="text2" name="userCode" style="display: none;"></textarea>
+
+            </form>
+        </div>
+
+        <div class="right-section">
+            <div class="button-container">
+                <button type="submit" id="submit-button" form="codeSubmissionForm">Submit</button>
+                <button type="button" id="reset-button">Reset</button>
+            </div>
+            
+            <div class="feedback-container" id="feedback" style="display:none;">
+                <label for="feedbackDisplay">Test Feedback:</label>
+                <pre id="feedbackDisplay"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/python");
+
+        // Synchronize Ace Editor content with the textarea
+        editor.getSession().on('change', function() {
+            document.getElementById('text2').value = editor.getSession().getValue();
+        });
+
+        function updateEditorHeight() {
+            // Calculate the height based on the line count
+            var newHeight = editor.getSession().getScreenLength() * editor.renderer.lineHeight + editor.renderer.scrollBar.getWidth();
+            document.getElementById('editor').style.height = Math.max(newHeight, 300) + 'px';
+            // This call is required to update the editor size
+            editor.resize();
+        }
+
+        // Initial update
+        updateEditorHeight();
+
+        // Update height on content change
+        editor.getSession().on('change', updateEditorHeight);
+
+        document.getElementById('codeSubmissionForm').onsubmit = function(event) {
+            event.preventDefault();
+
+            const feedbackContainer = document.getElementById('feedback');
+            const submitButton = document.getElementById('submit-button');
+            submitButton.disabled = true; // Disable the submit button
+
+            const formData = new FormData(this);
+            formData.set('userCode', editor.getValue()); // Set value from Ace Editor, replacing any existing 'userCode'
+
+            fetch('/submit-answer', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response based on the 'code' value
+                if (data.code && data.code === "error") {
+                    // If there is an error, display the error message
+                    feedbackContainer.classList.add('error'); // Add the error class
+                    feedbackContainer.innerHTML = data.msg; // Show error message
+                    feedbackContainer.style.display = 'block';
+                } else if (data.code && data.code === "task") {
+                    feedbackContainer.classList.remove('error');
+                    // waiting for the task completed
+                    const taskId = data.taskId;
+                    pollTaskStatus(taskId); // Start polling
+                };
+            })
+            .catch(error => {
+                if (error.name === 'AbortError') {
+                    console.log('Fetch aborted');
+                } else {
+                    console.error('Fetch error:', error);
+                }
+                submitButton.disabled = false; // Re-enable the submit button if there is an error
+            });
+        };
+
+        document.getElementById('reset-button').addEventListener('click', function() {
+            // Clear input fields
+            document.getElementById('token').value = '';
+            document.getElementById('problemId').value = '';
+
+            // Reset Ace Editor
+            editor.setValue('');
+
+            // Optionally, hide feedback section
+            document.getElementById('feedback').style.display = 'none';
+
+            document.getElementById('submit-button').disabled = false;
+        });
+
+        function pollTaskStatus(taskId) {
+            const statusUrl = `task/get-task-status/${taskId}`;
+            const resultElement = document.getElementById('feedback');
+
+            // Function to make the AJAX call
+            function checkStatus() {
+                fetch(statusUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'SUCCESS') {
+                            console.log('Task completed:', data.result);
+                            const code = data.result.code;
+                            const result = data.result.msg;
+                            if ( code === "error" ) {
+                                resultElement.classList.add('error');
+                                const displayText = result;
+                                resultElement.innerHTML = displayText; // Update the result element
+                                resultElement.style.display = 'block';
+                            } else if ( code === "success" ) {
+                                resultElement.classList.remove('error');
+                                const displayText = `${result.caseCorrect} test cases passed<br><br>Feedback:<br>${result.feedback}`;
+                                resultElement.innerHTML = displayText // Update the result element
+                                resultElement.style.display = 'block';
+                            };
+                            clearInterval(pollingInterval); // Stop polling
+                        } else if (data.status === 'FAILURE') {
+                            console.log('Task failed:', data.result);
+                            resultElement.classList.add('error');
+                            resultElement.innerHTML = 'Task failed: ' + data.result; // Update the result element for failure
+                            resultElement.style.display = 'block';
+                            clearInterval(pollingInterval); // Stop polling
+                        } else {
+                            console.log('Task status:', data.status);
+                            resultElement.classList.remove('error');
+                            // Continue polling
+                            resultElement.innerHTML = 'Task status: ' + data.status; // Update the status
+                            resultElement.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error)
+                        resultElement.classList.add('error');
+                        resultElement.innerHTML = 'Error: ' + error; // Display errors if any
+                        resultElement.style.display = 'block';
+                        clearInterval(pollingInterval); // Stop polling on error
+                    });
+            }
+
+            // Start polling
+            const pollingInterval = setInterval(checkStatus, 2000); // Poll every 2000 milliseconds (2 seconds)
+        };
+    </script>
+  </body>
+</html>

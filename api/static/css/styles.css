@@ -1,0 +1,96 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.left-section, .right-section {
+    flex-basis: 48%;
+}
+
+.right-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Aligns children with space between */
+    height: 100%; /* Adjust the height as needed */
+    width: 48%; /* Explicitly define the width to prevent expansion */
+    max-width: 48%; /* Prevent the section from growing beyond its intended size */
+}
+
+.feedback-container {
+    flex-grow: 1; /* Allows this container to grow and fill available space */
+    overflow-y: auto; /* Adds a scrollbar if content is too long */
+    max-height: 100%; /* Adjust the maximum height as needed */
+    margin-bottom: 10px; /* Add some spacing between feedback container and buttons */
+    margin-top: 20px;
+    /* width: 100%; Ensure the feedback container takes the full width of its parent */
+}
+
+.feedback-container::-webkit-scrollbar {
+    width: 12px; /* Adjust the width of the scrollbar */
+}
+
+.feedback-container::-webkit-scrollbar-track {
+    background: #f0f0f0; /* Light grey track */
+}
+
+.feedback-container::-webkit-scrollbar-thumb {
+    background-color: #888; /* Dark grey scrollbar handle */
+    border-radius: 6px; /* Optional: add rounded corners to the scrollbar handle */
+    border: 3px solid #f0f0f0; /* Creates padding around the scrollbar handle */
+}
+
+.feedback-container::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Darker grey scrollbar handle on hover */
+}
+
+.feedback-container.error {
+    background-color: #ffdddd; /* Light red background */
+    border: 1px solid #ff0000; /* Red border */
+    /* Add any other styles you want for the error state */
+}
+
+#submit-button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition-duration: 0.4s;
+}
+
+#submit-button:disabled {
+    background-color: #cccccc; /* Gray color for disabled button */
+    color: #666666;           /* Darker text color for disabled button */
+    cursor: not-allowed;      /* Change cursor to indicate the button is not clickable */
+}
+
+#submit-button:hover {
+    background-color: #45a049;
+}
+
+#reset-button {
+    background-color: #e55c21;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition-duration: 0.4s;
+}
+
+#reset-button:hover {
+    background-color: #822004;
+}
