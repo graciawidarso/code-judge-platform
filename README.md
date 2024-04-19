@@ -32,7 +32,12 @@ To get started with the Online Code Judge Platform, follow these steps:
 
 5. Access the platform in your web browser at `http://localhost:1234`.
 
-6. Monitor the submission activities by accessing the Celery Flower dashboard at `http://localhost:5000`.
+6. Monitor the submission activities by accessing the Celery Flower dashboard at `http://localhost:5555`.
 
-7. For data management, access the MongoDB database at `http://localhost:27017`.
+7. For data management, access the MongoDB database using MongoDB GUI tools like MongoDB Compass.
+
+TODO:
+- [ ] Provide example case
+- [ ] Unittest
+- [ ] Improve UI
 
